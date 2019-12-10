@@ -1,0 +1,22 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+nav {
+    float: left;
+    width: 25%;
+}
+
+#game-board {
+    float: left;
+    position: relative;
+    width: 450px;
+    height: 450px;
+}
+
+.board-tile {
+    margin: 1px;
+    background: blue;
+}
