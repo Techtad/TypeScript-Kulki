@@ -1,5 +1,7 @@
 var Settings = {
-    TileSize: 50
-}
+  BoardWidth: 9,
+  BoardHeight: 9,
+  TileSize: 50
+};
 
-export default Settings
+export default Settings;

@@ -17,6 +17,10 @@ nav {
 }
 
 .board-tile {
-    margin: 1px;
-    background: blue;
+    position: absolute;
+    border: 1px solid black;
+}
+
+.marble {
+    border: 1px solid black;
 }
