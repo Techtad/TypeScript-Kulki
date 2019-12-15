@@ -185,6 +185,7 @@ const Game = {
   },
 
   nextRound: function(): void {
+    if (Game.freeTilesCount() == 0) Game.over();
     if (!IsPlaying) return;
 
     for (let c of NextColors) Game.placeAtRandomSpot(c);
