@@ -19,8 +19,24 @@ nav {
 .board-tile {
     position: absolute;
     border: 1px solid black;
+    cursor: pointer;
+}
+
+.board-tile:hover {
+    background-color: lightgray;
 }
 
 .marble {
     border: 1px solid black;
+}
+
+.board-tile:hover .marble {
+    transform: scale(1.2, 1.2);
+    left: 10px;
+    top: 10px;
+    /* TODO: Skalowalność tego względem Settings */
+}
+
+.board-tile[selected] {
+    background-color: darkgray;
 }

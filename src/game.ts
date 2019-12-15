@@ -3,33 +3,12 @@ import * as Visuals from "./visuals";
 
 var Board: HTMLDivElement;
 var Tiles: BoardTile[][];
-
-var Game = {
-  start: function(): void {
-    Board = document.getElementById("game-board") as HTMLDivElement;
-    Board.innerHTML = "";
-    Tiles = [];
-    for (let x = 0; x < Settings.BoardWidth; x++) {
-      Tiles.push([]);
-      for (let y = 0; y < Settings.BoardHeight; y++) {
-        Tiles[x].push(null);
-      }
-    }
-    this.createBoard();
-  },
-
-  createBoard: function(): void {
-    for (let x = 0; x < Settings.BoardWidth; x++) {
-      for (let y = 0; y < Settings.BoardHeight; y++) {
-        let tile = new BoardTile(x * Settings.TileSize, y * Settings.TileSize);
-        Tiles[x][y] = tile;
-        console.log();
-        tile.color = randomColor();
-        Board.appendChild(tile.div);
-      }
-    }
-  }
-};
+var NextDisplay: HTMLDivElement;
+var NextColors: Color[];
+var IsPlaying: boolean = false;
+var SelectedTile: BoardTile = null;
+var ScoreDisplay: HTMLSpanElement;
+var Score: number = 0;
 
 enum Color {
   Empty = 0,
@@ -61,18 +40,30 @@ class BoardTile {
   private _div: HTMLDivElement;
   private marble: HTMLDivElement;
   private _color: Color;
+  public x: number;
+  public y: number;
 
-  constructor(x: number, y: number) {
+  constructor(
+    x: number,
+    y: number,
+    clickCallback: (x: number, y: number) => void,
+    color?: Color
+  ) {
+    this.x = x;
+    this.y = y;
+
     this._div = Visuals.Square(x, y, Settings.TileSize);
     this._div.classList.add("board-tile");
-    this._div.style.left = `${x}px`;
-    this._div.style.top = `${y}px`;
-    this._color = Color.Empty;
+    this._div.style.left = `${x * Settings.TileSize}px`;
+    this._div.style.top = `${y * Settings.TileSize}px`;
+    this._div.setAttribute("x", x.toString());
+    this._div.setAttribute("y", y.toString());
+    this._color = color | Color.Empty;
 
-    this._div.addEventListener("click", this.onClick);
+    this._div.addEventListener("click", () => {
+      clickCallback(x, y);
+    });
   }
-
-  onClick(): void {}
 
   get div(): HTMLDivElement {
     return this._div;
@@ -95,7 +86,205 @@ class BoardTile {
       this.marble.style.backgroundColor = Color[c];
       this._div.appendChild(this.marble);
     }
+    this._color = c;
   }
 }
+
+const Game = {
+  init: function(): void {
+    document.getElementById("start-btn").addEventListener("click", Game.start);
+    IsPlaying = true;
+    SelectedTile = null;
+    ScoreDisplay = document.getElementById("score-text");
+    Game.updateScore(0);
+
+    Board = document.getElementById("game-board") as HTMLDivElement;
+    Board.innerHTML = "";
+    Tiles = [];
+    for (let x = 0; x < Settings.BoardWidth; x++) {
+      Tiles.push([]);
+      for (let y = 0; y < Settings.BoardHeight; y++) {
+        Tiles[x].push(null);
+      }
+    }
+
+    Game.createBoard();
+    Game.nextBatch();
+  },
+
+  start: function(): void {
+    Game.init();
+  },
+
+  over: function(): void {
+    IsPlaying = false;
+    for (let row of Tiles) {
+      for (let tile of row) tile.div.classList.remove("board-tile");
+    }
+    console.log("Game over!");
+  },
+
+  createBoard: function(): void {
+    for (let x = 0; x < Settings.BoardWidth; x++) {
+      for (let y = 0; y < Settings.BoardHeight; y++) {
+        let tile = new BoardTile(x, y, Game.tileClicked);
+        Tiles[x][y] = tile;
+        Board.appendChild(tile.div);
+      }
+    }
+    for (let i = 0; i < 5; i++) Game.placeAtRandomSpot(randomColor());
+  },
+
+  nextBatch: function(): void {
+    NextDisplay = document.getElementById("next-display") as HTMLDivElement;
+    NextDisplay.innerHTML = "";
+    NextColors = [];
+    for (let i = 0; i < 3; i++) {
+      let color: Color = randomColor();
+      NextColors.push(color);
+      let marble = Visuals.Circle(0, 0, Settings.TileSize / 4);
+      marble.classList.add("marble");
+      marble.style.display = "inline-block";
+      marble.style.position = "initial";
+      marble.style.backgroundColor = Color[color];
+      marble.style.margin = "0 5px 0 5px";
+      NextDisplay.appendChild(marble);
+    }
+  },
+
+  nextRound: function(): void {
+    if (!IsPlaying) return;
+
+    for (let c of NextColors) Game.placeAtRandomSpot(c);
+    Game.nextBatch();
+  },
+
+  freeTilesCount: function(): number {
+    let count = 0;
+    for (let row of Tiles) {
+      for (let tile of row) if (tile.color == Color.Empty) count++;
+    }
+    return count;
+  },
+
+  placeAtRandomSpot(color: Color): void {
+    if (!IsPlaying) return;
+    if (Game.freeTilesCount() == 0) Game.over();
+
+    let randX: number = Math.floor(Math.random() * Settings.BoardWidth);
+    let randY: number = Math.floor(Math.random() * Settings.BoardHeight);
+    if (Tiles[randX][randY].color == Color.Empty) {
+      Tiles[randX][randY].color = color;
+      Game.checkForFive(randX, randY);
+    } else Game.placeAtRandomSpot(color);
+  },
+
+  tileClicked: function(x: number, y: number): void {
+    if (!IsPlaying) return;
+
+    if (SelectedTile == null) {
+      if (Tiles[x][y].color != Color.Empty) {
+        SelectedTile = Tiles[x][y];
+        SelectedTile.div.setAttribute("selected", "");
+      }
+    } else {
+      if (Tiles[x][y].color == Color.Empty) {
+        let temp = Tiles[x][y].color;
+        Tiles[x][y].color = SelectedTile.color;
+        Tiles[SelectedTile.x][SelectedTile.y].color = temp;
+        SelectedTile.div.removeAttribute("selected");
+        SelectedTile = null;
+
+        Game.checkForFive(x, y);
+
+        Game.nextRound();
+      } else {
+        SelectedTile.div.removeAttribute("selected");
+        SelectedTile = null;
+        if (Tiles[x][y] != SelectedTile) {
+          SelectedTile = Tiles[x][y];
+          SelectedTile.div.setAttribute("selected", "");
+        }
+      }
+    }
+  },
+
+  checkForFive(x: number, y: number) {
+    let color = Tiles[x][y].color;
+    if (color == Color.Empty) return;
+
+    let checkPos = (posX: number, posY: number, posColor: Color): boolean => {
+      return (
+        posX >= 0 &&
+        posX < Settings.BoardWidth &&
+        posY >= 0 &&
+        posY < Settings.BoardHeight &&
+        Tiles[posX][posY].color == posColor
+      );
+    };
+
+    let toRemove: [number, number][] = [];
+
+    let countInDir = (
+      dirX: number,
+      dirY: number,
+      c: Color,
+      remove?: boolean
+    ): void => {
+      if (remove) {
+        toRemove.push([x, y]);
+      }
+
+      let count = 1;
+      let offsetX = dirX;
+      let offsetY = dirY;
+      while (checkPos(x + offsetX, y + offsetY, color)) {
+        if (remove) {
+          toRemove.push([x + offsetX, y + offsetY]);
+        }
+
+        count++;
+        offsetX += dirX;
+        offsetY += dirY;
+      }
+      dirX = -dirX;
+      dirY = -dirY;
+      offsetX = dirX;
+      offsetY = dirY;
+
+      while (checkPos(x + offsetX, y + offsetY, color)) {
+        if (remove) {
+          toRemove.push([x + offsetX, y + offsetY]);
+        }
+        count++;
+        offsetX += dirX;
+        offsetY += dirY;
+      }
+
+      if (count >= 5 && !remove) countInDir(dirX, dirY, c, true);
+    };
+
+    countInDir(-1, -1, color);
+    countInDir(-1, 0, color);
+    countInDir(-1, 1, color);
+    countInDir(0, -1, color);
+
+    for (let coords of toRemove) {
+      Tiles[coords[0]][coords[1]].color = Color.Empty;
+      Score++;
+    }
+    Game.updateScore(Score);
+
+    /* console.log(x, y, Color[color], "\\", countInDir(-1, -1, color));
+    console.log(x, y, Color[color], "-", countInDir(-1, 0, color));
+    console.log(x, y, Color[color], "/", countInDir(-1, 1, color));
+    console.log(x, y, Color[color], "|", countInDir(0, -1, color)); */
+  },
+
+  updateScore: function(newScore: number): void {
+    Score = newScore;
+    ScoreDisplay.innerHTML = Score.toString();
+  }
+};
 
 export default Game;
