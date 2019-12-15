@@ -195,9 +195,7 @@ const Game = {
         SelectedTile.div.removeAttribute("selected");
         SelectedTile = null;
 
-        Game.checkForFive(x, y);
-
-        Game.nextRound();
+        if (!Game.checkForFive(x, y)) Game.nextRound();
       } else {
         SelectedTile.div.removeAttribute("selected");
         SelectedTile = null;
@@ -209,7 +207,7 @@ const Game = {
     }
   },
 
-  checkForFive(x: number, y: number) {
+  checkForFive(x: number, y: number): boolean {
     let color = Tiles[x][y].color;
     if (color == Color.Empty) return;
 
@@ -274,6 +272,7 @@ const Game = {
       Score++;
     }
     Game.updateScore(Score);
+    return toRemove.length > 0;
 
     /* console.log(x, y, Color[color], "\\", countInDir(-1, -1, color));
     console.log(x, y, Color[color], "-", countInDir(-1, 0, color));
