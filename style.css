@@ -22,9 +22,9 @@ nav {
     cursor: pointer;
 }
 
-.board-tile:hover {
+/* .board-tile:hover {
     background-color: lightgray;
-}
+} */
 
 .marble {
     border: 1px solid black;
@@ -39,4 +39,8 @@ nav {
 
 .board-tile[selected] {
     background-color: darkgray;
+}
+
+.path {
+    background-color: red;
 }

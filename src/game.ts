@@ -1,14 +1,16 @@
 import Settings from "./settings";
 import * as Visuals from "./visuals";
+import { Path } from "./pathfinding";
 
 var Board: HTMLDivElement;
-var Tiles: BoardTile[][];
+export var Tiles: BoardTile[][];
 var NextDisplay: HTMLDivElement;
 var NextColors: Color[];
 var IsPlaying: boolean = false;
 var SelectedTile: BoardTile = null;
 var ScoreDisplay: HTMLSpanElement;
 var Score: number = 0;
+var PathTiles: BoardTile[] = [];
 
 enum Color {
   Empty = 0,
@@ -34,6 +36,16 @@ function randomColor(): Color {
       )
     ] as keyof typeof Color
   ];
+}
+
+function traversible(x: number, y: number): boolean {
+  return (
+    x >= 0 &&
+    x < Settings.BoardWidth &&
+    y >= 0 &&
+    y < Settings.BoardHeight &&
+    Tiles[x][y].color == Color.Empty
+  );
 }
 
 class BoardTile {
@@ -62,7 +74,27 @@ class BoardTile {
 
     this._div.addEventListener("click", () => {
       clickCallback(x, y);
+      this.updatePathDisplay();
     });
+    this._div.addEventListener("mouseenter", this.updatePathDisplay.bind(this));
+  }
+
+  private updatePathDisplay(): void {
+    for (let tile of PathTiles) {
+      tile.div.classList.remove("path");
+    }
+    PathTiles = [];
+    if (SelectedTile != null && SelectedTile != this) {
+      let path = new Path(
+        [SelectedTile.x, SelectedTile.y],
+        [this.x, this.y],
+        traversible
+      );
+      for (let p of path.points) {
+        Tiles[p.x][p.y].div.classList.add("path");
+        PathTiles.push(Tiles[p.x][p.y]);
+      }
+    }
   }
 
   get div(): HTMLDivElement {
@@ -93,7 +125,6 @@ class BoardTile {
 const Game = {
   init: function(): void {
     document.getElementById("start-btn").addEventListener("click", Game.start);
-    IsPlaying = true;
     SelectedTile = null;
     ScoreDisplay = document.getElementById("score-text");
     Game.updateScore(0);
@@ -113,6 +144,7 @@ const Game = {
   },
 
   start: function(): void {
+    IsPlaying = true;
     Game.init();
   },
 
@@ -121,7 +153,7 @@ const Game = {
     for (let row of Tiles) {
       for (let tile of row) tile.div.classList.remove("board-tile");
     }
-    console.log("Game over!");
+    alert("Game over!");
   },
 
   createBoard: function(): void {
@@ -189,6 +221,13 @@ const Game = {
       }
     } else {
       if (Tiles[x][y].color == Color.Empty) {
+        let path = new Path(
+          [SelectedTile.x, SelectedTile.y],
+          [x, y],
+          traversible
+        );
+        if (path.length == 0) return;
+
         let temp = Tiles[x][y].color;
         Tiles[x][y].color = SelectedTile.color;
         Tiles[SelectedTile.x][SelectedTile.y].color = temp;
@@ -198,10 +237,11 @@ const Game = {
         if (!Game.checkForFive(x, y)) Game.nextRound();
       } else {
         SelectedTile.div.removeAttribute("selected");
-        SelectedTile = null;
         if (Tiles[x][y] != SelectedTile) {
           SelectedTile = Tiles[x][y];
           SelectedTile.div.setAttribute("selected", "");
+        } else {
+          SelectedTile = null;
         }
       }
     }
