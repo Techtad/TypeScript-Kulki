@@ -153,7 +153,8 @@ const Game = {
     for (let row of Tiles) {
       for (let tile of row) tile.div.classList.remove("board-tile");
     }
-    alert("Game over!");
+    NextDisplay.innerHTML = "KONIEC GRY";
+    alert("Koniec gry! Twój wynik: " + Score);
   },
 
   createBoard: function(): void {
@@ -185,10 +186,13 @@ const Game = {
   },
 
   nextRound: function(): void {
-    if (Game.freeTilesCount() == 0) Game.over();
-    if (!IsPlaying) return;
-
     for (let c of NextColors) Game.placeAtRandomSpot(c);
+
+    if (!IsPlaying) return;
+    if (Game.freeTilesCount() == 0) {
+      Game.over();
+      return;
+    }
     Game.nextBatch();
   },
 
@@ -229,9 +233,8 @@ const Game = {
         );
         if (path.length == 0) return;
 
-        let temp = Tiles[x][y].color;
         Tiles[x][y].color = SelectedTile.color;
-        Tiles[SelectedTile.x][SelectedTile.y].color = temp;
+        Tiles[SelectedTile.x][SelectedTile.y].color = Color.Empty;
         SelectedTile.div.removeAttribute("selected");
         SelectedTile = null;
 
