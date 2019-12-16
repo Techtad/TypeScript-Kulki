@@ -30,7 +30,9 @@ class Node extends Point {
   constructor(x: number, y: number, prev: Node, dest: Point) {
     super(x, y);
     this.previous = prev;
-    this.toDest = this.distanceTo(dest);
+    this.toDest = Settings.EuclideanDistance
+      ? this.distanceTo(dest)
+      : Math.abs(dest.x - x) + Math.abs(dest.y - y);
   }
 
   get sum(): number {

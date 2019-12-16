@@ -1,5 +1,6 @@
 export default {
   BoardWidth: 9,
   BoardHeight: 9,
-  TileSize: 50
+  TileSize: 50,
+  EuclideanDistance: true
 };
