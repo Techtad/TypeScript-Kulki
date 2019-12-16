@@ -39,7 +39,7 @@ function randomColor(): Color {
   ];
 }
 
-function traversible(x: number, y: number): boolean {
+function isTraversible(x: number, y: number): boolean {
   return (
     x >= 0 &&
     x < Settings.BoardWidth &&
@@ -98,7 +98,7 @@ class BoardTile {
       let path = new Path(
         [SelectedTile.x, SelectedTile.y],
         [this.x, this.y],
-        traversible
+        isTraversible
       );
       for (let p of path.points) {
         Tiles[p.x][p.y].div.classList.add("path");
@@ -239,7 +239,7 @@ const Game = {
         let path = new Path(
           [SelectedTile.x, SelectedTile.y],
           [x, y],
-          traversible
+          isTraversible
         );
         if (path.length == 0) return;
 
