@@ -241,7 +241,7 @@ const Game = {
           [x, y],
           isTraversible
         );
-        if (path.length == 0) return;
+        if (!path.found) return;
 
         Tiles[x][y].color = SelectedTile.color;
         Tiles[SelectedTile.x][SelectedTile.y].color = Color.Empty;
