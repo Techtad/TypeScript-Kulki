@@ -11,6 +11,7 @@ var SelectedTile: BoardTile = null;
 var ScoreDisplay: HTMLSpanElement;
 var Score: number = 0;
 var PathTiles: BoardTile[] = [];
+var HoverTile: BoardTile;
 
 enum Color {
   Empty = 0,
@@ -77,9 +78,18 @@ class BoardTile {
       this.updatePathDisplay();
     });
     this._div.addEventListener("mouseenter", this.updatePathDisplay.bind(this));
+    this._div.addEventListener("mouseleave", () => {
+      if ((HoverTile = this)) {
+        for (let tile of PathTiles) {
+          tile.div.classList.remove("path");
+        }
+        PathTiles = [];
+      }
+    });
   }
 
   private updatePathDisplay(): void {
+    HoverTile = this;
     for (let tile of PathTiles) {
       tile.div.classList.remove("path");
     }
