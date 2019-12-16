@@ -79,7 +79,7 @@ class BoardTile {
     });
     this._div.addEventListener("mouseenter", this.updatePathDisplay.bind(this));
     this._div.addEventListener("mouseleave", () => {
-      if ((HoverTile = this)) {
+      if (HoverTile == this) {
         for (let tile of PathTiles) {
           tile.div.classList.remove("path");
         }
