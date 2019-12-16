@@ -95,11 +95,13 @@ class BoardTile {
     }
     PathTiles = [];
     if (SelectedTile != null && SelectedTile != this) {
+      console.time("pathfinding");
       let path = new Path(
         [SelectedTile.x, SelectedTile.y],
         [this.x, this.y],
         isTraversible
       );
+      console.timeEnd("pathfinding");
       for (let p of path.points) {
         Tiles[p.x][p.y].div.classList.add("path");
         PathTiles.push(Tiles[p.x][p.y]);
