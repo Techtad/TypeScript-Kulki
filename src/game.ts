@@ -27,14 +27,14 @@ enum Color {
 function randomColor(): Color {
   return Color[
     Color[
-      Math.floor(
-        1 +
-          Math.random() *
-            (Object.keys(Color).filter(v => {
-              return !isNaN(parseInt(v));
-            }).length -
-              1)
-      )
+    Math.floor(
+      1 +
+      Math.random() *
+      (Object.keys(Color).filter(v => {
+        return !isNaN(parseInt(v));
+      }).length -
+        1)
+    )
     ] as keyof typeof Color
   ];
 }
@@ -47,6 +47,15 @@ function isTraversible(x: number, y: number): boolean {
     y < Settings.BoardHeight &&
     Tiles[x][y].color == Color.Empty
   );
+}
+
+function tupleInArray(t: [number, number], a: [number, number][]): boolean {
+  let inArray = false
+  for (let e of a)
+    if (e[0] == t[0] && e[1] == t[1])
+      inArray = true
+
+  return inArray
 }
 
 class BoardTile {
@@ -135,7 +144,7 @@ class BoardTile {
 }
 
 const Game = {
-  init: function(): void {
+  init: function (): void {
     document.getElementById("start-btn").addEventListener("click", Game.start);
     SelectedTile = null;
     ScoreDisplay = document.getElementById("score-text");
@@ -155,12 +164,12 @@ const Game = {
     Game.nextBatch();
   },
 
-  start: function(): void {
+  start: function (): void {
     IsPlaying = true;
     Game.init();
   },
 
-  over: function(): void {
+  over: function (): void {
     IsPlaying = false;
     for (let row of Tiles) {
       for (let tile of row) tile.div.classList.remove("board-tile");
@@ -169,7 +178,7 @@ const Game = {
     alert("Koniec gry! Twój wynik: " + Score);
   },
 
-  createBoard: function(): void {
+  createBoard: function (): void {
     for (let x = 0; x < Settings.BoardWidth; x++) {
       for (let y = 0; y < Settings.BoardHeight; y++) {
         let tile = new BoardTile(x, y, Game.tileClicked);
@@ -180,7 +189,7 @@ const Game = {
     for (let i = 0; i < 5; i++) Game.placeAtRandomSpot(randomColor());
   },
 
-  nextBatch: function(): void {
+  nextBatch: function (): void {
     NextDisplay = document.getElementById("next-display") as HTMLDivElement;
     NextDisplay.innerHTML = "";
     NextColors = [];
@@ -197,7 +206,7 @@ const Game = {
     }
   },
 
-  nextRound: function(): void {
+  nextRound: function (): void {
     for (let c of NextColors) Game.placeAtRandomSpot(c);
 
     if (!IsPlaying) return;
@@ -208,7 +217,7 @@ const Game = {
     Game.nextBatch();
   },
 
-  freeTilesCount: function(): number {
+  freeTilesCount: function (): number {
     let count = 0;
     for (let row of Tiles) {
       for (let tile of row) if (tile.color == Color.Empty) count++;
@@ -228,7 +237,7 @@ const Game = {
     } else Game.placeAtRandomSpot(color);
   },
 
-  tileClicked: function(x: number, y: number): void {
+  tileClicked: function (x: number, y: number): void {
     if (!IsPlaying) return;
 
     if (SelectedTile == null) {
@@ -286,7 +295,7 @@ const Game = {
       remove?: boolean
     ): void => {
       if (remove) {
-        toRemove.push([x, y]);
+        if (!tupleInArray([x, y], toRemove)) toRemove.push([x, y]);
       }
 
       let count = 1;
@@ -336,7 +345,7 @@ const Game = {
     console.log(x, y, Color[color], "|", countInDir(0, -1, color)); */
   },
 
-  updateScore: function(newScore: number): void {
+  updateScore: function (newScore: number): void {
     Score = newScore;
     ScoreDisplay.innerHTML = Score.toString();
   }
